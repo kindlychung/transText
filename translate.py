@@ -6,11 +6,13 @@ import subprocess
 from .reportError import newError
 from .reportError import newReport
 from itertools import chain
+import re
 
 class Translate:
     def __init__(self, orig_str, from_lang, to_lang):
-        orig_str = orig_str.replace("\n", " ").replace("\r", "")
-        self.orig_str = orig_str.split(". ")
+        self.orig_str = orig_str.replace("\n", " ").replace("\r", "")
+        self.orig_str = re.compile(r"[,.!:;?]").split(self.orig_str)
+        self.orig_str = [x.strip() for x in self.orig_str]
         self.n_sentence = len(self.orig_str)
         self.trans_str = [None] * self.n_sentence
         self.from_lang = from_lang
