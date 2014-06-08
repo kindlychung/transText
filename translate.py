@@ -1,38 +1,52 @@
-#!/usr/bin/python3
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
-import urllib.request
-import urllib.parse
+import urllib
+import urllib2
+import urlparse
 import subprocess
 from .reportError import newError
 from .reportError import newReport
 from itertools import chain
 import re
+from bs4 import BeautifulSoup
 
 class Translate:
     def __init__(self, orig_str, from_lang, to_lang):
-        self.orig_str = orig_str.replace("\n", " ").replace("\r", "")
-        self.orig_str = re.compile(r"[,.!:;?]").split(self.orig_str)
+        self.orig_str = orig_str
+        self.orig_str = self.orig_str.replace("\n", " ").replace("\r", "")
+        # important, extracts the unicode string from QString
+        self.orig_str = unicode(orig_str)
+        # self.orig_str = re.compile(r"[,.!:;?]").split(self.orig_str)
+        self.orig_str = re.compile(r"(?:\. |\! |\; |\? )").split(self.orig_str)
         self.orig_str = [x.strip() for x in self.orig_str]
+        self.orig_str_all = "____".join(self.orig_str)
         self.n_sentence = len(self.orig_str)
         self.trans_str = [None] * self.n_sentence
-        self.from_lang = from_lang
-        self.to_lang = to_lang
+        self.from_lang = unicode(from_lang)
+        self.to_lang = unicode(to_lang)
+
         agents = {'User-Agent': "Mozilla/4.0"}
         linkroot = "http://translate.google.com/m?sl=%s&hl=%s&q=" % \
-            (from_lang, to_lang)
+            (self.from_lang, self.to_lang)
+        # important, in python2 you need to encode this string in utf8 manually
+        # , essentially, it's just break down a multi-byte char into single bytes
+        query = urllib.quote(self.orig_str_all.encode("utf8"))
+        link = linkroot + query
+        print("from in Translate: ", self.from_lang)
+        print("to in Translate: ", self.to_lang)
+        print(link)
+        request = urllib2.Request(link, headers=agents)
+        webpage = urllib2.urlopen(request).read()
+        soup = BeautifulSoup(webpage)
+        res = soup.find_all("div", class_="t0")[0]
+        res = res.string.strip()
+        res = res.replace("\n", " ").replace("\r", "")
+        res = unicode(res)
+        res = res.split("____")
         for i in range(self.n_sentence):
-            query = urllib.parse.quote(self.orig_str[i])
-            link = linkroot + query
-            print(link)
-            request = urllib.request.Request(link, headers=agents)
-            webpage = urllib.request.urlopen(request).read()
-            from bs4 import BeautifulSoup
-            soup = BeautifulSoup(webpage)
-            res = soup.find_all("div", class_="t0")[0]
-            print("res", i, res)
-            res = res.string.strip()
-            res = res.replace("\n", " ").replace("\r", "")
-            self.trans_str[i] = res
+            self.trans_str[i] = res[i]
 
 
 
@@ -48,15 +62,13 @@ class Translate:
         list_sen = [["<div>" + self.orig_str[i] + "</div>",
                      "<div style='background-color: gray'>" + self.trans_str[i] + "</div>"] for i in range(self.n_sentence)]
         list_sen = chain.from_iterable(list_sen)
-        print(list_sen)
         list_sen = "".join(list_sen)
-        print(list_sen)
         return list_sen
 
             
             
 
-# testfr = """
+# testfr = u"""
 # Plus de 762 000.  candidats au baccalauréat. 
 # Ces augmentations.  s'expliquent par la hausse.
 # """
