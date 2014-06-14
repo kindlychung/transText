@@ -1,6 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 
 import sys
 import subprocess
@@ -47,11 +46,11 @@ class Form(QWidget):
         self.from_textp.textChanged.connect(self.updateTrans)
 
     def updateFromLang(self):
-        self.lang = unicode(self.lang_combo.currentText())
+        self.lang = self.lang_combo.currentText()
         print("from in updateFromLang: ", self.lang)
         self.updateTrans()
     def updateToLang(self):
-        self.to_lang = unicode(self.to_lang_combo.currentText())
+        self.to_lang = self.to_lang_combo.currentText()
         print("to in updateToLang: ", self.to_lang)
         self.updateTrans()
     def updateTrans(self):
